@@ -1,6 +1,6 @@
 module.exports = {
   contentSource: {
-    type: 'CP',
+    type: "CP",
   },
   seo: {
     title: "FastStore",
@@ -87,16 +87,21 @@ module.exports = {
   analytics: {
     // https://developers.google.com/tag-platform/tag-manager/web#standard_web_page_installation,
     gtmContainerId: "GTM-1234567",
+    // Disable VTEX OpenTelemetry diagnostics. The @vtex/diagnostics-nodejs
+    // package pulls optional Nest/Fastify/Koa instrumentations that aren't
+    // installed in this Next.js app, producing harmless but noisy webpack
+    // "Module not found" / "Critical dependency" warnings. Off for local dev.
+    otelEnabled: false,
   },
 
   experimental: {
     nodeVersion: 24,
     cypressVersion: 12,
     enableFaststoreMyAccount: false,
-    optimizedFonts: true, 
+    optimizedFonts: true,
   },
 
   vtexHeadlessCms: {
     webhookUrls: ["https://newstore.myvtex.com/cms-releases/webhook-releases"],
   },
-};
+}

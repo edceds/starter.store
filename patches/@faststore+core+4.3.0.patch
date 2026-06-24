@@ -1,0 +1,43 @@
+diff --git a/node_modules/@faststore/core/next.config.js b/node_modules/@faststore/core/next.config.js
+index c384be0..493b2c0 100644
+--- a/node_modules/@faststore/core/next.config.js
++++ b/node_modules/@faststore/core/next.config.js
+@@ -60,6 +60,19 @@ const nextConfig = {
+     instrumentationHook: true,
+     scrollRestoration: !storeConfig.experimental.scrollRestoration,
+   },
++  /*
++   * Keep the OpenTelemetry diagnostics packages as runtime externals instead of
++   * bundling them. @vtex/diagnostics-nodejs `require()`s optional Nest/Fastify/Koa
++   * instrumentations it does not declare, so bundling them makes webpack emit
++   * noisy "Module not found" / "Critical dependency" warnings even though the code
++   * guards every require in try/catch and is disabled when analytics.otelEnabled
++   * is false. Externalizing leaves them as plain node requires, resolved (or
++   * harmlessly skipped) at runtime.
++   */
++  serverExternalPackages: [
++    '@faststore/diagnostics',
++    '@vtex/diagnostics-nodejs',
++  ],
+   /*
+    * The FastStore Discovery CLI will update this value to match the path where the
+    * command is being run, because that is where the node_modules directory is.
+@@ -68,6 +81,18 @@ const nextConfig = {
+    * */
+   outputFileTracingRoot: getRootFolder(),
+   webpack: (config, { isServer, dev }) => {
++    // Silence the unavoidable "Critical dependency: the request of a dependency
++    // is an expression" warning emitted by require-in-the-middle inside the
++    // OpenTelemetry instrumentation core. It is dynamic require() code that
++    // webpack cannot statically analyze; the warning is benign. (Pairs with
++    // serverExternalPackages above, which handles the "Module not found" ones.)
++    config.ignoreWarnings = [
++      ...(config.ignoreWarnings || []),
++      { module: /@opentelemetry\/instrumentation/ },
++      { module: /require-in-the-middle/ },
++      { module: /@vtex\/diagnostics-nodejs/ },
++    ]
++
+     // https://github.com/vercel/next.js/discussions/11267#discussioncomment-2479112
+     // camel-case style names from css modules
+     config.module.rules
